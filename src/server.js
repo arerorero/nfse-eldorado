@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { baixaPDF } from "./baixaPDF.js";
+import { baixaPDF, deleteNota } from "./scraper.js";
 
 async function handler(req, res) {
   try {
@@ -8,6 +8,14 @@ async function handler(req, res) {
     if (req.url === "/baixarPDF") {
       const { user, password, nf } = data;
       const resposta = await baixaPDF(user, password, nf);
+      if (!res.headersSent) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+      }
+      res.end(JSON.stringify({ link: resposta }));
+    }
+    if (req.url === "/cancelar") {
+      const { user, password, nf } = data;
+      const resposta = await deleteNota(user, password, nf);
       if (!res.headersSent) {
         res.writeHead(200, { "Content-Type": "application/json" });
       }

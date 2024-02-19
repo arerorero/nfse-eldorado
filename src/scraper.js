@@ -1,19 +1,15 @@
 import puppeteer from "puppeteer";
 
-export const baixaPDF = async (user, password, nf) => {
-  const browser = await puppeteer.launch({
-    args: ["--start-maximized", "--headless=new"],
-  });
-  const page = await browser.newPage();
+async function gotoNota(page, user, password, nf) {
   await page.goto(
     `https://eldorado.megasoftarrecadanet.com.br/primeiro-acesso`
   );
 
   await page.click("img.botao");
 
-  await page.type("#cpf", user);
+  await page.type("#cpf", String(user));
 
-  await page.type("#senha", password);
+  await page.type("#senha", String(password));
 
   await page.click("button[type=submit].btn.btn-mega.btn-block.primary.login");
 
@@ -22,19 +18,43 @@ export const baixaPDF = async (user, password, nf) => {
       `https://eldorado.megasoftarrecadanet.com.br/gerenciar-nfs-e`
     );
   });
+  await new Promise((r) => setTimeout(r, 1000)).then(async () => {
+    await page.type("#numero", nf);
+  });
+  // click ente
 
-  const link = await pegarNota(browser, page, nf);
+  await page.keyboard.press("Enter");
+}
+
+export const deleteNota = async (user, password, nf) => {
+  const browser = await puppeteer.launch({
+    args: [
+      "--start-maximized",
+      // separador kk
+      "--headless=new",
+    ],
+    // headless: false,
+  });
+  const page = await browser.newPage();
+  await gotoNota(page, user, password, nf);
+  console.log("fazer ele apagar a nota aqui");
+  browser.close();
+  return "retornar algo aqui";
+};
+
+export const baixaPDF = async (user, password, nf) => {
+  const browser = await puppeteer.launch({
+    args: ["--start-maximized", "--headless=new"],
+  });
+  const page = await browser.newPage();
+  await gotoNota(page, user, password, nf);
+
+  const link = await pegarNota(browser, page);
   browser.close();
   return tratarLink(link);
 };
 
-async function pegarNota(browser, page, nf) {
-  // await #numero to load
-  await new Promise((r) => setTimeout(r, 500)).then(async () => {
-    await page.type("#numero", nf);
-  });
-  // click enter
-  await page.keyboard.press("Enter");
+async function pegarNota(browser, page) {
   await new Promise((r) => setTimeout(r, 500));
   await page.click(
     "table.table.table-hover.table-bordered.lazy.table-striped tbody tr:first-child"
